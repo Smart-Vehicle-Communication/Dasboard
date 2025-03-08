@@ -15,8 +15,8 @@ const DashboardLayout: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-300">Live monitoring dashboard for connected autonomous vehicles</p>
           </header>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="md:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="lg:col-span-2">
               <MapVisualization />
             </div>
             <div>
@@ -24,10 +24,8 @@ const DashboardLayout: React.FC = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="col-span-1 md:col-span-2">
-              <UserControls />
-            </div>
+          <div className="grid grid-cols-1 gap-6">
+            <UserControls />
           </div>
         </div>
       </div>

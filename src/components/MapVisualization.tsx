@@ -11,8 +11,16 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/comp
 import 'leaflet/dist/leaflet.css';
 
 // Fix the Leaflet icon issue
-const iconUrl = 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png';
-const shadowUrl = 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png';
+const defaultIcon = L.icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+L.Marker.prototype.options.icon = defaultIcon;
 
 // Vehicle marker icons
 const createVehicleIcon = (status: 'normal' | 'warning' | 'critical') => {
@@ -71,7 +79,7 @@ const MapVisualization: React.FC = () => {
       setMapCenter([avgLat, avgLng]);
       setZoom(13);
     }
-  }, [selectedVehicleId, filteredVehicles]);
+  }, [selectedVehicleId, filteredVehicles, vehicles]);
   
   // Find connections between vehicles that are within 0.5km of each other
   const connections = React.useMemo(() => {
@@ -113,12 +121,13 @@ const MapVisualization: React.FC = () => {
         </div>
       </CardHeader>
       <CardContent className="p-0 pb-4 px-4">
-        <div className="h-[calc(100%-2rem)] min-h-[400px] rounded-lg overflow-hidden border shadow-sm">
+        <div className="h-[500px] rounded-lg overflow-hidden border shadow-sm">
           <MapContainer
             center={mapCenter}
             zoom={zoom}
             style={{ height: '100%', width: '100%' }}
             zoomControl={false}
+            key={`map-${mapCenter.join(',')}-${zoom}`}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -167,31 +176,6 @@ const MapVisualization: React.FC = () => {
                   </div>
                 </Popup>
               </Marker>
-            ))}
-            
-            {/* Accident markers */}
-            {accidents.map(accident => (
-              <TooltipProvider key={accident.id}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <CircleMarker
-                      center={accident.location}
-                      radius={15}
-                      pathOptions={{
-                        color: '#FF3B30',
-                        fillColor: '#FF3B30',
-                        fillOpacity: 0.2,
-                      }}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <div className="text-xs">
-                      <p className="font-medium">Accident: {accident.id}</p>
-                      <p>Severity: {accident.severity}</p>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
             ))}
             
             {/* Accident markers */}
