@@ -39,14 +39,14 @@ const UserControls: React.FC = () => {
             <span>Track Vehicle</span>
           </Label>
           <Select
-            value={selectedVehicleId || ""}
-            onValueChange={(value) => setSelectedVehicleId(value === "" ? null : value)}
+            value={selectedVehicleId || "none"}
+            onValueChange={(value) => setSelectedVehicleId(value === "none" ? null : value)}
           >
             <SelectTrigger id="vehicle-select" className="w-full bg-white/50">
               <SelectValue placeholder="All vehicles" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All vehicles</SelectItem>
+              <SelectItem value="none">All vehicles</SelectItem>
               {vehicles.map(vehicle => (
                 <SelectItem key={vehicle.id} value={vehicle.id}>
                   {vehicle.id} ({vehicle.status})
