@@ -1,5 +1,5 @@
 
-import React, { ErrorBoundary } from 'react';
+import React from 'react';
 import { DashboardProvider } from '../context/DashboardContext';
 import MapVisualization from './MapVisualization';
 import VehicleStatusTable from './VehicleStatusTable';
