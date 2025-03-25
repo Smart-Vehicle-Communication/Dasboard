@@ -3,9 +3,9 @@ import type { Vehicle } from "./types"
 export function generateMockVehicles(count: number, currentVehicleId: string): Vehicle[] {
   const vehicles: Vehicle[] = []
 
-  // Generate a base position (roughly centered on a city)
-  const baseLat = 37.7749 // San Francisco latitude
-  const baseLng = -122.4194 // San Francisco longitude
+  // Generate a base position (centered on Bangalore city)
+  const baseLat = 12.9716 // Bangalore latitude
+  const baseLng = 77.5946 // Bangalore longitude
 
   // Create the current vehicle first
   const currentVehicle: Vehicle = {

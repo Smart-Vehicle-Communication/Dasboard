@@ -1,10 +1,12 @@
 "use client"
 
 import { useEffect } from "react"
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
+import { useRouter } from "next/navigation"
+import { MapContainer, TileLayer, Marker, Popup, Circle, Polygon, Tooltip, useMap } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import type { Vehicle } from "@/lib/types"
+import { AlertTriangle } from "lucide-react"
 
 // Component to recenter map on current vehicle
 function MapCenterSetter({ position }: { position: [number, number] }) {
@@ -20,9 +22,20 @@ function MapCenterSetter({ position }: { position: [number, number] }) {
 interface VehicleMapProps {
   vehicles: Vehicle[]
   currentVehicleId: string
+  accidents?: any[]
+  geofences?: any[]
+  weather?: any
 }
 
-export default function VehicleMap({ vehicles, currentVehicleId }: VehicleMapProps) {
+export default function VehicleMap({
+  vehicles,
+  currentVehicleId,
+  accidents = [],
+  geofences = [],
+  weather = null,
+}: VehicleMapProps) {
+  const router = useRouter()
+
   // Fix Leaflet marker icon issue in Next.js
   useEffect(() => {
     // This is needed to fix the marker icon issue with Leaflet in Next.js
@@ -62,6 +75,100 @@ export default function VehicleMap({ vehicles, currentVehicleId }: VehicleMapPro
     shadowSize: [41, 41],
   })
 
+  // Update the accident icon to use a danger symbol
+  const accidentIcon = new L.DivIcon({
+    className: "custom-div-icon",
+    html: `<div style="background-color: #ff4d4f; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 2px solid white;">
+           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+             <line x1="12" y1="9" x2="12" y2="13"></line>
+             <line x1="12" y1="17" x2="12.01" y2="17"></line>
+           </svg>
+         </div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
+  })
+
+  // Replace the weather icon with different icons based on condition
+  const getWeatherIcon = (condition: string) => {
+    if (!weather) return null
+
+    switch (condition) {
+      case "Sunny":
+        return new L.DivIcon({
+          className: "custom-div-icon",
+          html: `<div style="background-color: #faad14; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 2px solid white;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                  </svg>
+                </div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15],
+          popupAnchor: [0, -15],
+        })
+      case "Rainy":
+        return new L.DivIcon({
+          className: "custom-div-icon",
+          html: `<div style="background-color: #1890ff; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 2px solid white;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="16" y1="13" x2="16" y2="21"></line>
+                    <line x1="8" y1="13" x2="8" y2="21"></line>
+                    <line x1="12" y1="15" x2="12" y2="23"></line>
+                    <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"></path>
+                  </svg>
+                </div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15],
+          popupAnchor: [0, -15],
+        })
+      case "Windy":
+        return new L.DivIcon({
+          className: "custom-div-icon",
+          html: `<div style="background-color: #52c41a; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 2px solid white;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path>
+                  </svg>
+                </div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15],
+          popupAnchor: [0, -15],
+        })
+      case "Partly Cloudy":
+        return new L.DivIcon({
+          className: "custom-div-icon",
+          html: `<div style="background-color: #722ed1; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 2px solid white;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+                  </svg>
+                </div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15],
+          popupAnchor: [0, -15],
+        })
+      default:
+        return new L.DivIcon({
+          className: "custom-div-icon",
+          html: `<div style="background-color: #d9d9d9; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 2px solid white;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                  </svg>
+                </div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15],
+          popupAnchor: [0, -15],
+        })
+    }
+  }
+
   const currentVehicle = vehicles.find((v) => v.id === currentVehicleId)
   const defaultPosition: [number, number] = currentVehicle
     ? [currentVehicle.position.lat, currentVehicle.position.lng]
@@ -79,6 +186,11 @@ export default function VehicleMap({ vehicles, currentVehicleId }: VehicleMapPro
     return vehicle.speed > 0 ? movingVehicleIcon : stoppedVehicleIcon
   }
 
+  // Handle click on vehicle marker
+  const handleVehicleClick = (vehicleId: string) => {
+    router.push(`/vehicle/${vehicleId}`)
+  }
+
   return (
     <MapContainer center={defaultPosition} zoom={13} style={{ height: "100%", width: "100%", borderRadius: "0.5rem" }}>
       <TileLayer
@@ -88,14 +200,110 @@ export default function VehicleMap({ vehicles, currentVehicleId }: VehicleMapPro
 
       <MapCenterSetter position={defaultPosition} />
 
+      {/* Geofenced areas */}
+      {geofences.map((geofence, index) => (
+        <Polygon
+          key={`geofence-${index}`}
+          positions={geofence.coordinates}
+          pathOptions={{
+            fillColor:
+              geofence.type === "school"
+                ? "rgba(255, 0, 0, 0.2)"
+                : geofence.type === "residential"
+                  ? "rgba(0, 0, 255, 0.2)"
+                  : "rgba(0, 255, 0, 0.2)",
+            weight: 2,
+            opacity: 0.7,
+            color: geofence.type === "school" ? "red" : geofence.type === "residential" ? "blue" : "green",
+          }}
+        >
+          <Tooltip direction="center" permanent>
+            <div className="text-xs font-medium">
+              {geofence.name} ({geofence.speedLimit} km/h)
+            </div>
+          </Tooltip>
+        </Polygon>
+      ))}
+
+      {/* Safety radius - 2km range */}
+      <Circle
+        center={defaultPosition}
+        radius={2000}
+        pathOptions={{
+          fillColor: "rgba(0, 0, 255, 0.05)",
+          fillOpacity: 0.2,
+          color: "rgba(0, 0, 255, 0.3)",
+          weight: 1,
+        }}
+      />
+
+      {/* Weather indicator */}
+      {weather && (
+        <Marker
+          position={[currentVehicle.position.lat + 0.01, currentVehicle.position.lng + 0.01]}
+          icon={getWeatherIcon(weather.condition)}
+        >
+          <Popup>
+            <div className="p-2">
+              <div className="flex items-center mb-2">
+                {getWeatherIcon(weather.condition)}
+                <span className="ml-2 font-medium">{weather.condition}</span>
+              </div>
+              <p>Temperature: {weather.temperature}°C</p>
+              <p>Wind: {weather.wind} km/h</p>
+              <p>Visibility: {weather.visibility} km</p>
+            </div>
+          </Popup>
+        </Marker>
+      )}
+
+      {/* Accident markers */}
+      {accidents.map((accident, index) => (
+        <Marker key={`accident-${index}`} position={[accident.position.lat, accident.position.lng]} icon={accidentIcon}>
+          <Popup>
+            <div className="p-2">
+              <div className="flex items-center mb-2">
+                <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
+                <h3 className="font-bold">Accident Report</h3>
+              </div>
+              <p className="text-sm mb-1">Type: {accident.type}</p>
+              <p className="text-sm mb-1">Severity: {accident.severity}</p>
+              <p className="text-sm mb-1">Time: {accident.time}</p>
+              <p className="text-sm mb-1">Vehicles involved: {accident.vehiclesInvolved}</p>
+              <button
+                size="sm"
+                className="mt-2 w-full"
+                onClick={() => router.push(`/accidents/${accident.id}?vehicleId=${currentVehicleId}`)}
+              >
+                View Details
+              </button>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+
+      {/* Vehicle markers */}
       {vehicles.map((vehicle) => (
-        <Marker key={vehicle.id} position={[vehicle.position.lat, vehicle.position.lng]} icon={getVehicleIcon(vehicle)}>
+        <Marker
+          key={vehicle.id}
+          position={[vehicle.position.lat, vehicle.position.lng]}
+          icon={getVehicleIcon(vehicle)}
+          eventHandlers={{
+            click: () => handleVehicleClick(vehicle.id),
+          }}
+        >
           <Popup>
             <div className="p-1">
               <h3 className="font-bold">Vehicle {vehicle.id}</h3>
               <p>Speed: {vehicle.speed} km/h</p>
               {vehicle.id !== currentVehicleId && <p>Distance: {vehicle.distanceFromCurrent} km</p>}
               <p>Status: {vehicle.speed > 0 ? "Moving" : "Stopped"}</p>
+              <button
+                onClick={() => handleVehicleClick(vehicle.id)}
+                className="mt-2 text-sm text-blue-600 hover:underline"
+              >
+                View Details
+              </button>
             </div>
           </Popup>
         </Marker>
