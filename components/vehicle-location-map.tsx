@@ -111,7 +111,7 @@ export default function VehicleLocationMap({
         <Popup>
           <div className="p-1">
             <h3 className="font-bold">Vehicle {vehicle.id}</h3>
-            <p>Speed: {vehicle.speed} km/h</p>
+            <p>Speed: {vehicle.speed.toFixed(2)} km/h</p>
             <p>Battery: {vehicle.battery}%</p>
           </div>
         </Popup>
@@ -123,8 +123,8 @@ export default function VehicleLocationMap({
           <Popup>
             <div className="p-1">
               <h3 className="font-bold">Vehicle {v.id}</h3>
-              <p>Speed: {v.speed} km/h</p>
-              <p>Distance: {v.distanceFromCurrent} km</p>
+              <p>Speed: {v.speed.toFixed(2)} km/h</p>
+              <p>Distance: {v.distanceFromCurrent?.toFixed(2)} km</p>
             </div>
           </Popup>
         </Marker>

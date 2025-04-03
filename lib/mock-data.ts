@@ -39,7 +39,7 @@ export function generateMockVehicles(count: number, currentVehicleId: string): V
 
     const vehicle: Vehicle = {
       id: vehicleId,
-      speed: Math.floor(Math.random() * 120),
+      speed: Number((Math.random() * 120).toFixed(2)),
       position: {
         lat: baseLat + latVariation,
         lng: baseLng + lngVariation,
@@ -83,9 +83,11 @@ export function updateVehiclePositions(vehicles: Vehicle[]): Vehicle[] {
         lat: vehicle.position.lat + latChange,
         lng: vehicle.position.lng + lngChange,
       },
-      // Randomly adjust speed occasionally
+      // Randomly adjust speed occasionally with decimal precision
       speed:
-        Math.random() > 0.9 ? Math.max(0, Math.min(120, vehicle.speed + (Math.random() - 0.5) * 10)) : vehicle.speed,
+        Math.random() > 0.9
+          ? Number(Math.max(0, Math.min(120, vehicle.speed + (Math.random() - 0.5) * 10)).toFixed(2))
+          : vehicle.speed,
       lastUpdated: now,
     }
   })

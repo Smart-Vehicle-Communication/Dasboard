@@ -47,7 +47,7 @@ export default function VehicleTable({ vehicles, currentVehicleId }: VehicleTabl
               onClick={() => handleVehicleClick(vehicle.id)}
             >
               <TableCell>{vehicle.id}</TableCell>
-              <TableCell>{vehicle.speed}</TableCell>
+              <TableCell>{vehicle.speed.toFixed(2)}</TableCell>
               <TableCell>{vehicle.id === currentVehicleId ? "Current" : `${vehicle.distanceFromCurrent} km`}</TableCell>
               <TableCell>{vehicle.battery}%</TableCell>
               <TableCell>{vehicle.speed > 0 ? "Moving" : "Stopped"}</TableCell>

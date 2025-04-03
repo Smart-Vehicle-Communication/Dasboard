@@ -1,19 +1,34 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { MapContainer, TileLayer, Marker, Popup, Circle, Polygon, Tooltip, useMap } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import type { Vehicle } from "@/lib/types"
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle, CloudRain, CloudSun, Wind } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 // Component to recenter map on current vehicle
 function MapCenterSetter({ position }: { position: [number, number] }) {
   const map = useMap()
+  const lastPositionRef = useRef<[number, number]>(position)
 
   useEffect(() => {
-    map.setView(position, map.getZoom())
+    // Only update the map view if the position has changed significantly
+    const [lat1, lng1] = lastPositionRef.current
+    const [lat2, lng2] = position
+
+    // Calculate distance between points (simple approximation)
+    const distance = Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lng2 - lng1, 2))
+
+    // If distance is significant, update the map view
+    if (distance > 0.0001) {
+      // Threshold for movement
+      map.setView(position, map.getZoom())
+      lastPositionRef.current = position
+      console.log("Map center updated to:", position)
+    }
   }, [position, map])
 
   return null
@@ -35,6 +50,7 @@ export default function VehicleMap({
   weather = null,
 }: VehicleMapProps) {
   const router = useRouter()
+  const mapRef = useRef<L.Map | null>(null)
 
   // Fix Leaflet marker icon issue in Next.js
   useEffect(() => {
@@ -47,32 +63,47 @@ export default function VehicleMap({
     })
   }, [])
 
-  // Create custom icons for vehicles
-  const movingVehicleIcon = new L.Icon({
-    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
-    shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
+  // Create custom car icons for vehicles
+  const movingVehicleIcon = new L.DivIcon({
+    className: "custom-div-icon",
+    html: `<div style="background-color: #1890ff; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 2px solid white;">
+           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+             <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path>
+             <circle cx="6.5" cy="16.5" r="2.5"></circle>
+             <circle cx="16.5" cy="16.5" r="2.5"></circle>
+           </svg>
+         </div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
   })
 
-  const stoppedVehicleIcon = new L.Icon({
-    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png",
-    shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
+  const stoppedVehicleIcon = new L.DivIcon({
+    className: "custom-div-icon",
+    html: `<div style="background-color: #d9d9d9; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 2px solid white;">
+           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+             <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path>
+             <circle cx="6.5" cy="16.5" r="2.5"></circle>
+             <circle cx="16.5" cy="16.5" r="2.5"></circle>
+           </svg>
+         </div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
   })
 
-  const currentVehicleIcon = new L.Icon({
-    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-    shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
+  const currentVehicleIcon = new L.DivIcon({
+    className: "custom-div-icon",
+    html: `<div style="background-color: #f5222d; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 2px solid white;">
+           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+             <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path>
+             <circle cx="6.5" cy="16.5" r="2.5"></circle>
+             <circle cx="16.5" cy="16.5" r="2.5"></circle>
+           </svg>
+         </div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
   })
 
   // Update the accident icon to use a danger symbol
@@ -186,13 +217,26 @@ export default function VehicleMap({
     return vehicle.speed > 0 ? movingVehicleIcon : stoppedVehicleIcon
   }
 
-  // Handle click on vehicle marker
+  // Update the vehicle click handler to show a popup instead of navigating
   const handleVehicleClick = (vehicleId: string) => {
-    router.push(`/vehicle/${vehicleId}`)
+    // Instead of navigating to a vehicle details page, we'll just show details in the popup
+    console.log(`Vehicle ${vehicleId} clicked`)
   }
 
+  // Log vehicle positions for debugging
+  console.log("Current vehicle position:", currentVehicle.position)
+  console.log(
+    "All vehicle positions:",
+    vehicles.map((v) => ({ id: v.id, position: v.position })),
+  )
+
   return (
-    <MapContainer center={defaultPosition} zoom={13} style={{ height: "100%", width: "100%", borderRadius: "0.5rem" }}>
+    <MapContainer
+      center={defaultPosition}
+      zoom={13}
+      style={{ height: "100%", width: "100%", borderRadius: "0.5rem" }}
+      ref={mapRef}
+    >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -246,7 +290,13 @@ export default function VehicleMap({
           <Popup>
             <div className="p-2">
               <div className="flex items-center mb-2">
-                {getWeatherIcon(weather.condition)}
+                {weather.condition === "Sunny" ? (
+                  <CloudSun className="h-5 w-5 text-yellow-500 mr-2" />
+                ) : weather.condition === "Rainy" ? (
+                  <CloudRain className="h-5 w-5 text-blue-500 mr-2" />
+                ) : (
+                  <Wind className="h-5 w-5 text-gray-500 mr-2" />
+                )}
                 <span className="ml-2 font-medium">{weather.condition}</span>
               </div>
               <p>Temperature: {weather.temperature}°C</p>
@@ -270,13 +320,13 @@ export default function VehicleMap({
               <p className="text-sm mb-1">Severity: {accident.severity}</p>
               <p className="text-sm mb-1">Time: {accident.time}</p>
               <p className="text-sm mb-1">Vehicles involved: {accident.vehiclesInvolved}</p>
-              <button
+              <Button
                 size="sm"
                 className="mt-2 w-full"
                 onClick={() => router.push(`/accidents/${accident.id}?vehicleId=${currentVehicleId}`)}
               >
                 View Details
-              </button>
+              </Button>
             </div>
           </Popup>
         </Marker>
@@ -295,15 +345,12 @@ export default function VehicleMap({
           <Popup>
             <div className="p-1">
               <h3 className="font-bold">Vehicle {vehicle.id}</h3>
-              <p>Speed: {vehicle.speed} km/h</p>
-              {vehicle.id !== currentVehicleId && <p>Distance: {vehicle.distanceFromCurrent} km</p>}
+              <p>Speed: {vehicle.speed.toFixed(2)} km/h</p>
+              {vehicle.id !== currentVehicleId && <p>Distance: {vehicle.distanceFromCurrent?.toFixed(2)} km</p>}
               <p>Status: {vehicle.speed > 0 ? "Moving" : "Stopped"}</p>
-              <button
-                onClick={() => handleVehicleClick(vehicle.id)}
-                className="mt-2 text-sm text-blue-600 hover:underline"
-              >
-                View Details
-              </button>
+              <p>Battery: {vehicle.battery}%</p>
+              <p>Position: {vehicle.position.lat.toFixed(6)}, {vehicle.position.lng.toFixed(6)}</p>
+              {vehicle.lastUpdated && <p>Last updated: {new Date(vehicle.lastUpdated).toLocaleTimeString()}</p>}
             </div>
           </Popup>
         </Marker>

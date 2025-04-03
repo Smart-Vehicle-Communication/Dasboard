@@ -24,14 +24,19 @@ export default function AccidentMap({ accidents, currentVehicle, onSelectAcciden
     })
   }, [])
 
-  // Create custom icons
-  const currentVehicleIcon = new L.Icon({
-    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-    shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
+  // Create custom car icon for current vehicle
+  const currentVehicleIcon = new L.DivIcon({
+    className: "custom-div-icon",
+    html: `<div style="background-color: #f5222d; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 2px solid white;">
+           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+             <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path>
+             <circle cx="6.5" cy="16.5" r="2.5"></circle>
+             <circle cx="16.5" cy="16.5" r="2.5"></circle>
+           </svg>
+         </div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
   })
 
   // Update the accident icon to use a danger symbol

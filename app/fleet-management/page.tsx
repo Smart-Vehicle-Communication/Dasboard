@@ -5,7 +5,30 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Car, Battery, Gauge, MapPin, Activity, AlertTriangle, BarChart2 } from "lucide-react"
+import { ArrowLeft, Car, Battery, Gauge, MapPin, Activity, AlertTriangle, BarChart2, Users, Zap } from "lucide-react"
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
+import {
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  AreaChart,
+  Area,
+} from "recharts"
 import MainNav from "@/components/main-nav"
 import { generateMockVehicles } from "@/lib/mock-data"
 import { generateMockAccidents } from "@/lib/accident-data"
@@ -88,6 +111,65 @@ export default function FleetManagement() {
       { name: "Overdue", value: Math.floor(allVehicles.length * 0.1) },
     ]
 
+    // Generate efficiency data
+    const efficiencyData = [
+      { name: "Jan", efficiency: 65 },
+      { name: "Feb", efficiency: 68 },
+      { name: "Mar", efficiency: 70 },
+      { name: "Apr", efficiency: 72 },
+      { name: "May", efficiency: 75 },
+      { name: "Jun", efficiency: 78 },
+      { name: "Jul", efficiency: 80 },
+      { name: "Aug", efficiency: 82 },
+      { name: "Sep", efficiency: 85 },
+      { name: "Oct", efficiency: 87 },
+      { name: "Nov", efficiency: 89 },
+      { name: "Dec", efficiency: 90 },
+    ]
+
+    // Generate usage patterns
+    const usagePatterns = [
+      { name: "Morning (6-10)", value: Math.floor(Math.random() * 20) + 15 },
+      { name: "Midday (10-14)", value: Math.floor(Math.random() * 15) + 10 },
+      { name: "Afternoon (14-18)", value: Math.floor(Math.random() * 25) + 20 },
+      { name: "Evening (18-22)", value: Math.floor(Math.random() * 15) + 10 },
+      { name: "Night (22-6)", value: Math.floor(Math.random() * 10) + 5 },
+    ]
+
+    // Generate driver performance data
+    const driverPerformance = [
+      { subject: "Speed Compliance", A: 120, B: 110, fullMark: 150 },
+      { subject: "Fuel Efficiency", A: 98, B: 130, fullMark: 150 },
+      { subject: "Safety Score", A: 86, B: 130, fullMark: 150 },
+      { subject: "Maintenance", A: 99, B: 100, fullMark: 150 },
+      { subject: "Route Adherence", A: 85, B: 90, fullMark: 150 },
+      { subject: "Timeliness", A: 65, B: 85, fullMark: 150 },
+    ]
+
+    // Generate energy consumption data
+    const energyConsumption = [
+      { name: "Jan", consumption: 4000 },
+      { name: "Feb", consumption: 3000 },
+      { name: "Mar", consumption: 2000 },
+      { name: "Apr", consumption: 2780 },
+      { name: "May", consumption: 1890 },
+      { name: "Jun", consumption: 2390 },
+      { name: "Jul", consumption: 3490 },
+      { name: "Aug", consumption: 3490 },
+      { name: "Sep", consumption: 2490 },
+      { name: "Oct", consumption: 2790 },
+      { name: "Nov", consumption: 3290 },
+      { name: "Dec", consumption: 3890 },
+    ]
+
+    // Generate vehicle type distribution
+    const vehicleTypes = [
+      { name: "Sedan", value: 20 },
+      { name: "SUV", value: 15 },
+      { name: "Truck", value: 10 },
+      { name: "Van", value: 5 },
+    ]
+
     setFleetStats({
       totalVehicles: allVehicles.length,
       movingVehicles,
@@ -101,6 +183,11 @@ export default function FleetManagement() {
       hourlyActivity,
       weeklyAccidents,
       maintenanceData,
+      efficiencyData,
+      usagePatterns,
+      driverPerformance,
+      energyConsumption,
+      vehicleTypes,
     })
   }, [vehicleId, router])
 
@@ -128,9 +215,9 @@ export default function FleetManagement() {
             <MainNav vehicleId={vehicleId} />
 
             <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard?vehicleId=${vehicleId}`)}>
+              <Button variant="outline" size="sm" onClick={() => router.push(`/`)}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Dashboard
+                Back to Home
               </Button>
             </div>
           </div>
@@ -143,16 +230,17 @@ export default function FleetManagement() {
             <div>
               <h1 className="text-3xl font-bold flex items-center">
                 <BarChart2 className="mr-2 h-6 w-6 text-primary" />
-                Fleet Management Dashboard
+                Production Dashboard
               </h1>
               <p className="text-muted-foreground">Comprehensive overview of your vehicle fleet</p>
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
-              <TabsList className="w-full md:w-auto grid grid-cols-3">
+              <TabsList className="w-full md:w-auto grid grid-cols-4">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="performance">Performance</TabsTrigger>
                 <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -219,25 +307,40 @@ export default function FleetManagement() {
                   </CardHeader>
                   <CardContent>
                     <div className="h-[300px] flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="flex items-center justify-center gap-4">
-                          <div>
-                            <div className="w-4 h-4 bg-blue-500 rounded-full mb-1 mx-auto"></div>
-                            <p className="text-sm">Moving: {fleetStats.movingVehicles}</p>
-                          </div>
-                          <div>
-                            <div className="w-4 h-4 bg-gray-400 rounded-full mb-1 mx-auto"></div>
-                            <p className="text-sm">Stopped: {fleetStats.stoppedVehicles}</p>
-                          </div>
-                        </div>
-                        <div className="mt-4">
-                          <p className="text-lg font-medium">Total: {fleetStats.totalVehicles} vehicles</p>
-                          <p className="text-sm text-muted-foreground">
-                            {Math.round((fleetStats.movingVehicles / fleetStats.totalVehicles) * 100)}% of fleet is
-                            currently active
-                          </p>
-                        </div>
-                      </div>
+                      <ChartContainer
+                        config={{
+                          moving: {
+                            label: "Moving",
+                            color: "hsl(var(--chart-1))",
+                          },
+                          stopped: {
+                            label: "Stopped",
+                            color: "hsl(var(--chart-2))",
+                          },
+                        }}
+                        className="h-[300px]"
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={fleetStats.statusDistribution}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              outerRadius={80}
+                              fill="#8884d8"
+                              dataKey="value"
+                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                            >
+                              {fleetStats.statusDistribution.map((entry: any, index: number) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip content={<ChartTooltipContent />} />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
                     </div>
                   </CardContent>
                 </Card>
@@ -251,22 +354,26 @@ export default function FleetManagement() {
                   </CardHeader>
                   <CardContent>
                     <div className="h-[300px]">
-                      <div className="space-y-4 pt-4">
-                        {fleetStats.batteryDistribution.map((item: any, index: number) => (
-                          <div key={index}>
-                            <div className="flex justify-between mb-1">
-                              <span className="text-sm">{item.name}</span>
-                              <span className="text-sm font-medium">{item.value} vehicles</span>
-                            </div>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-blue-500"
-                                style={{ width: `${(item.value / fleetStats.totalVehicles) * 100}%` }}
-                              ></div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <ChartContainer
+                        config={{
+                          value: {
+                            label: "Vehicles",
+                            color: "hsl(var(--chart-1))",
+                          },
+                        }}
+                        className="h-[300px]"
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={fleetStats.batteryDistribution}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip content={<ChartTooltipContent />} />
+                            <Legend />
+                            <Bar dataKey="value" fill="var(--color-value)" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
                     </div>
                   </CardContent>
                 </Card>
@@ -281,22 +388,26 @@ export default function FleetManagement() {
                 </CardHeader>
                 <CardContent>
                   <div className="h-[300px]">
-                    <div className="space-y-4 pt-4">
-                      {fleetStats.speedDistribution.map((item: any, index: number) => (
-                        <div key={index}>
-                          <div className="flex justify-between mb-1">
-                            <span className="text-sm">{item.name}</span>
-                            <span className="text-sm font-medium">{item.value} vehicles</span>
-                          </div>
-                          <div className="h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-green-500"
-                              style={{ width: `${(item.value / fleetStats.totalVehicles) * 100}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <ChartContainer
+                      config={{
+                        value: {
+                          label: "Vehicles",
+                          color: "hsl(var(--chart-3))",
+                        },
+                      }}
+                      className="h-[300px]"
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={fleetStats.speedDistribution}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip content={<ChartTooltipContent />} />
+                          <Legend />
+                          <Bar dataKey="value" fill="var(--color-value)" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -306,29 +417,37 @@ export default function FleetManagement() {
               <Card className="bg-white shadow-sm">
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center text-lg">
-                    <Activity className="mr-2 h-5 w-5 text-primary" /> Hourly Activity
+                    <Activity className="mr-2 h-5 w-5 text-primary" /> Fleet Efficiency Trend
                   </CardTitle>
-                  <CardDescription>Vehicle activity over 24 hours</CardDescription>
+                  <CardDescription>Monthly efficiency metrics</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[400px] overflow-x-auto">
-                    <div className="min-w-[800px]">
-                      <div className="grid grid-cols-24 gap-1 h-[300px] items-end">
-                        {fleetStats.hourlyActivity.map((hour: any, index: number) => (
-                          <div key={index} className="flex flex-col items-center">
-                            <div
-                              className="w-full bg-blue-500 rounded-t-sm"
-                              style={{ height: `${(hour.activeVehicles / 40) * 100}%` }}
-                            ></div>
-                            <span className="text-xs mt-1">{hour.hour}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 flex justify-between">
-                        <span className="text-sm text-muted-foreground">Hour of Day</span>
-                        <span className="text-sm text-muted-foreground">Active Vehicles</span>
-                      </div>
-                    </div>
+                  <div className="h-[400px]">
+                    <ChartContainer
+                      config={{
+                        efficiency: {
+                          label: "Efficiency (%)",
+                          color: "hsl(var(--chart-1))",
+                        },
+                      }}
+                      className="h-[400px]"
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={fleetStats.efficiencyData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip content={<ChartTooltipContent />} />
+                          <Legend />
+                          <Line
+                            type="monotone"
+                            dataKey="efficiency"
+                            stroke="var(--color-efficiency)"
+                            activeDot={{ r: 8 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -343,17 +462,26 @@ export default function FleetManagement() {
                   </CardHeader>
                   <CardContent>
                     <div className="h-[300px]">
-                      <div className="grid grid-cols-7 gap-2 h-[250px] items-end pt-4">
-                        {fleetStats.weeklyAccidents.map((day: any, index: number) => (
-                          <div key={index} className="flex flex-col items-center">
-                            <div
-                              className="w-full bg-orange-500 rounded-t-sm"
-                              style={{ height: `${(day.count / 5) * 100}%` }}
-                            ></div>
-                            <span className="text-xs mt-1">{day.day}</span>
-                          </div>
-                        ))}
-                      </div>
+                      <ChartContainer
+                        config={{
+                          count: {
+                            label: "Accidents",
+                            color: "hsl(var(--chart-4))",
+                          },
+                        }}
+                        className="h-[300px]"
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={fleetStats.weeklyAccidents}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="day" />
+                            <YAxis />
+                            <Tooltip content={<ChartTooltipContent />} />
+                            <Legend />
+                            <Bar dataKey="count" fill="var(--color-count)" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
                     </div>
                   </CardContent>
                 </Card>
@@ -361,43 +489,42 @@ export default function FleetManagement() {
                 <Card className="bg-white shadow-sm">
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-center text-lg">
-                      <MapPin className="mr-2 h-5 w-5 text-primary" /> Geographic Distribution
+                      <MapPin className="mr-2 h-5 w-5 text-primary" /> Usage Patterns
                     </CardTitle>
-                    <CardDescription>Vehicle distribution by region</CardDescription>
+                    <CardDescription>Vehicle usage by time of day</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-[300px] flex items-center justify-center">
-                      <div className="space-y-4 w-full max-w-md">
-                        {[
-                          { name: "North Bangalore", value: 15, color: "#0088FE" },
-                          { name: "South Bangalore", value: 12, color: "#00C49F" },
-                          { name: "East Bangalore", value: 8, color: "#FFBB28" },
-                          { name: "West Bangalore", value: 10, color: "#FF8042" },
-                          { name: "Central Bangalore", value: 5, color: "#8884d8" },
-                        ].map((region, index) => (
-                          <div key={index}>
-                            <div className="flex justify-between mb-1">
-                              <div className="flex items-center">
-                                <div
-                                  className="w-3 h-3 rounded-full mr-2"
-                                  style={{ backgroundColor: region.color }}
-                                ></div>
-                                <span className="text-sm">{region.name}</span>
-                              </div>
-                              <span className="text-sm font-medium">{region.value} vehicles</span>
-                            </div>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full"
-                                style={{
-                                  width: `${(region.value / 50) * 100}%`,
-                                  backgroundColor: region.color,
-                                }}
-                              ></div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="h-[300px]">
+                      <ChartContainer
+                        config={{
+                          value: {
+                            label: "Vehicles",
+                            color: "hsl(var(--chart-2))",
+                          },
+                        }}
+                        className="h-[300px]"
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={fleetStats.usagePatterns}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              outerRadius={80}
+                              fill="#8884d8"
+                              dataKey="value"
+                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                            >
+                              {fleetStats.usagePatterns.map((entry: any, index: number) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip content={<ChartTooltipContent />} />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
                     </div>
                   </CardContent>
                 </Card>
@@ -414,50 +541,37 @@ export default function FleetManagement() {
                     <CardDescription>Vehicle maintenance schedule status</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-[300px] flex items-center justify-center">
-                      <div className="space-y-4 w-full max-w-md">
-                        <div className="grid grid-cols-3 gap-4 text-center">
-                          <div className="bg-green-100 p-4 rounded-lg">
-                            <p className="text-2xl font-bold text-green-700">{fleetStats.maintenanceData[0].value}</p>
-                            <p className="text-sm text-green-700">Up to date</p>
-                          </div>
-                          <div className="bg-yellow-100 p-4 rounded-lg">
-                            <p className="text-2xl font-bold text-yellow-700">{fleetStats.maintenanceData[1].value}</p>
-                            <p className="text-sm text-yellow-700">Due soon</p>
-                          </div>
-                          <div className="bg-red-100 p-4 rounded-lg">
-                            <p className="text-2xl font-bold text-red-700">{fleetStats.maintenanceData[2].value}</p>
-                            <p className="text-sm text-red-700">Overdue</p>
-                          </div>
-                        </div>
-
-                        <div className="mt-6">
-                          <div className="h-4 flex rounded-full overflow-hidden">
-                            <div
-                              className="bg-green-500"
-                              style={{
-                                width: `${(fleetStats.maintenanceData[0].value / fleetStats.totalVehicles) * 100}%`,
-                              }}
-                            ></div>
-                            <div
-                              className="bg-yellow-500"
-                              style={{
-                                width: `${(fleetStats.maintenanceData[1].value / fleetStats.totalVehicles) * 100}%`,
-                              }}
-                            ></div>
-                            <div
-                              className="bg-red-500"
-                              style={{
-                                width: `${(fleetStats.maintenanceData[2].value / fleetStats.totalVehicles) * 100}%`,
-                              }}
-                            ></div>
-                          </div>
-                          <p className="text-sm text-center mt-2 text-muted-foreground">
-                            {Math.round((fleetStats.maintenanceData[0].value / fleetStats.totalVehicles) * 100)}% of
-                            fleet is up to date with maintenance
-                          </p>
-                        </div>
-                      </div>
+                    <div className="h-[300px]">
+                      <ChartContainer
+                        config={{
+                          value: {
+                            label: "Vehicles",
+                            color: "hsl(var(--chart-1))",
+                          },
+                        }}
+                        className="h-[300px]"
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={fleetStats.maintenanceData}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              outerRadius={80}
+                              fill="#8884d8"
+                              dataKey="value"
+                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                            >
+                              <Cell fill="#4ade80" /> {/* Up to date - green */}
+                              <Cell fill="#facc15" /> {/* Due soon - yellow */}
+                              <Cell fill="#f87171" /> {/* Overdue - red */}
+                            </Pie>
+                            <Tooltip content={<ChartTooltipContent />} />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
                     </div>
                   </CardContent>
                 </Card>
@@ -471,35 +585,33 @@ export default function FleetManagement() {
                   </CardHeader>
                   <CardContent>
                     <div className="h-[300px]">
-                      <div className="space-y-4 pt-4">
-                        {[
-                          { category: "Excellent", value: Math.floor(fleetStats.totalVehicles * 0.6) },
-                          { category: "Good", value: Math.floor(fleetStats.totalVehicles * 0.25) },
-                          { category: "Fair", value: Math.floor(fleetStats.totalVehicles * 0.1) },
-                          { category: "Poor", value: Math.floor(fleetStats.totalVehicles * 0.05) },
-                        ].map((item, index) => (
-                          <div key={index}>
-                            <div className="flex justify-between mb-1">
-                              <span className="text-sm">{item.category}</span>
-                              <span className="text-sm font-medium">{item.value} vehicles</span>
-                            </div>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className={`h-full ${
-                                  index === 0
-                                    ? "bg-green-500"
-                                    : index === 1
-                                      ? "bg-blue-500"
-                                      : index === 2
-                                        ? "bg-yellow-500"
-                                        : "bg-red-500"
-                                }`}
-                                style={{ width: `${(item.value / fleetStats.totalVehicles) * 100}%` }}
-                              ></div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <ChartContainer
+                        config={{
+                          value: {
+                            label: "Vehicles",
+                            color: "hsl(var(--chart-3))",
+                          },
+                        }}
+                        className="h-[300px]"
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={[
+                              { category: "Excellent", value: Math.floor(fleetStats.totalVehicles * 0.6) },
+                              { category: "Good", value: Math.floor(fleetStats.totalVehicles * 0.25) },
+                              { category: "Fair", value: Math.floor(fleetStats.totalVehicles * 0.1) },
+                              { category: "Poor", value: Math.floor(fleetStats.totalVehicles * 0.05) },
+                            ]}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="category" />
+                            <YAxis />
+                            <Tooltip content={<ChartTooltipContent />} />
+                            <Legend />
+                            <Bar dataKey="value" fill="var(--color-value)" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
                     </div>
                   </CardContent>
                 </Card>
@@ -555,6 +667,142 @@ export default function FleetManagement() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="analytics" className="mt-0 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="bg-white shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center text-lg">
+                      <Users className="mr-2 h-5 w-5 text-primary" /> Driver Performance
+                    </CardTitle>
+                    <CardDescription>Performance metrics comparison</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px]">
+                      <ChartContainer
+                        config={{
+                          A: {
+                            label: "Current Month",
+                            color: "hsl(var(--chart-1))",
+                          },
+                          B: {
+                            label: "Previous Month",
+                            color: "hsl(var(--chart-2))",
+                          },
+                        }}
+                        className="h-[300px]"
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RadarChart outerRadius={90} data={fleetStats.driverPerformance}>
+                            <PolarGrid />
+                            <PolarAngleAxis dataKey="subject" />
+                            <PolarRadiusAxis angle={30} domain={[0, 150]} />
+                            <Radar
+                              name="Current Month"
+                              dataKey="A"
+                              stroke="var(--color-A)"
+                              fill="var(--color-A)"
+                              fillOpacity={0.6}
+                            />
+                            <Radar
+                              name="Previous Month"
+                              dataKey="B"
+                              stroke="var(--color-B)"
+                              fill="var(--color-B)"
+                              fillOpacity={0.6}
+                            />
+                            <Legend />
+                            <Tooltip content={<ChartTooltipContent />} />
+                          </RadarChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center text-lg">
+                      <Zap className="mr-2 h-5 w-5 text-primary" /> Energy Consumption
+                    </CardTitle>
+                    <CardDescription>Monthly energy usage</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px]">
+                      <ChartContainer
+                        config={{
+                          consumption: {
+                            label: "Energy (kWh)",
+                            color: "hsl(var(--chart-3))",
+                          },
+                        }}
+                        className="h-[300px]"
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={fleetStats.energyConsumption}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip content={<ChartTooltipContent />} />
+                            <Legend />
+                            <Area
+                              type="monotone"
+                              dataKey="consumption"
+                              stroke="var(--color-consumption)"
+                              fill="var(--color-consumption)"
+                              fillOpacity={0.3}
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="bg-white shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center text-lg">
+                    <Car className="mr-2 h-5 w-5 text-primary" /> Vehicle Type Distribution
+                  </CardTitle>
+                  <CardDescription>Fleet composition by vehicle type</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px]">
+                    <ChartContainer
+                      config={{
+                        value: {
+                          label: "Vehicles",
+                          color: "hsl(var(--chart-4))",
+                        },
+                      }}
+                      className="h-[300px]"
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={fleetStats.vehicleTypes}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          >
+                            {fleetStats.vehicleTypes.map((entry: any, index: number) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip content={<ChartTooltipContent />} />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
                   </div>
                 </CardContent>
               </Card>
